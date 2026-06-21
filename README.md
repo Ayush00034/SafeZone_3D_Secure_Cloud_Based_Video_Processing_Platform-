@@ -151,3 +151,4 @@ gunicorn -w 1 -b 0.0.0.0:5000 --timeout 600 app:app
 
 ---
 
+Built by [Ayush Chandrakar](https://github.com/Ayush00034)
