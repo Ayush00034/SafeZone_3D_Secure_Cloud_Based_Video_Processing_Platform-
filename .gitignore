@@ -1,0 +1,51 @@
+# ── Project-specific: calibration & model files ─────────────
+# These are hardware-specific (camera calibration) or too large/custom (trained weights).
+# See SETUP.md — you must generate/train your own.
+stereo_map.xml
+*.xml
+!docs/*.xml
+best.pt
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# ── Captured / processed video ───────────────────────────────
+raw_stereo_*.mp4
+*.mp4
+*.avi
+!docs/**/*.mp4
+/tmp/safezone/
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# ── Environment / secrets ────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+credentials
+.aws/
+
+# ── OS / editor cruft ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+nohup.out
