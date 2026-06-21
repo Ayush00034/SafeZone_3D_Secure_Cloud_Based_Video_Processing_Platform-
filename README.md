@@ -138,7 +138,6 @@ Laptop (2 cams) → ALB → Frontend EC2 (Nginx) → VPC Peering → Backend EC2
 
 ![Results Page](docs/14-results-page.png)
 
-> Place these 14 images in a `docs/` folder at the repo root so the images above render.
 
 ---
 
