@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeZone 3D — Speed Hump Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ───────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;
+  --border:#30363d;--border2:#444c56;
+  --text:#e6edf3;--muted:#8b949e;--hint:#484f58;
+  --blue:#388bfd;--blue-dim:#1f6feb;
+  --green:#3fb950;--green-bg:#0f3d1f;
+  --red:#f85149;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+  --r:8px;--rl:12px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
+button{font-family:var(--sans);cursor:pointer}
+a{color:var(--blue);text-decoration:none}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── TOPBAR ──────────────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(13,17,23,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 2rem;height:56px;gap:1rem;
+}
+.tlogo{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.05em}
+.tlogo span{color:var(--blue)}
+.tsep{flex:1}
+.tcss{
+  display:flex;align-items:center;gap:6px;
+  border:1px solid var(--border);border-radius:999px;
+  padding:4px 12px;font-size:12px;color:var(--hint);
+  background:var(--bg2);
+}
+.dot-g{width:7px;height:7px;border-radius:50%;background:var(--hint)}
+.tnav{display:flex;gap:4px}
+.nbtn{
+  background:none;border:none;
+  padding:6px 12px;border-radius:var(--r);
+  font-size:13px;color:var(--muted);
+  transition:color .15s,background .15s;
+}
+.nbtn:hover,.nbtn.on{color:var(--text);background:var(--bg3)}
+
+/* ── SCREENS ─────────────────────────────────────────────── */
+.scr{display:none}.scr.on{display:block}
+.wrap{max-width:960px;margin:0 auto;padding:0 1.5rem}
+
+/* ── LANDING ─────────────────────────────────────────────── */
+#s-land{padding:5rem 0 4rem;text-align:center}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:1.5rem}
+.htitle{font-size:clamp(2rem,5vw,3.2rem);font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-bottom:1rem}
+.htitle .ac{color:var(--blue)}
+.hsub{font-size:1rem;color:var(--muted);max-width:510px;margin:0 auto 3rem;line-height:1.7}
+
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:620px;margin:0 auto 3rem}
+.hcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.3rem 1.1rem;text-align:left;transition:border-color .2s}
+.hcard:hover{border-color:var(--border2)}
+.hstep{font-family:var(--mono);font-size:10px;color:var(--hint);margin-bottom:8px}
+.hico{font-size:1.4rem;margin-bottom:8px}
+.htit{font-size:13.5px;font-weight:600;margin-bottom:4px}
+.hdesc{font-size:12px;color:var(--muted);line-height:1.5}
+
+.lchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:5px 14px;font-size:12.5px;color:var(--hint);margin-bottom:2.5rem}
+.soon{background:var(--bg3);border-radius:999px;font-size:10px;font-family:var(--mono);padding:1px 7px;color:var(--hint)}
+
+.cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--r);font-size:14px;font-weight:500;border:none;transition:opacity .15s,background .15s}
+.btn:hover{opacity:.85}
+.bp{background:var(--blue-dim);color:#fff}
+.bs{background:var(--bg2);color:var(--muted);border:1px solid var(--border)}
+.bs:hover{color:var(--text);border-color:var(--border2)}
+
+.sstrip{display:flex;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;max-width:580px;margin:4rem auto 0}
+.si{flex:1;padding:14px 16px;border-right:1px solid var(--border)}
+.si:last-child{border-right:none}
+.sl{font-size:11px;color:var(--hint);margin-bottom:4px;font-family:var(--mono)}
+.sv{font-size:14px;font-weight:600}
+
+/* ── UPLOAD ──────────────────────────────────────────────── */
+#s-up{padding:3rem 0}
+.shdr{margin-bottom:2rem}
+.shdr h2{font-size:1.5rem;font-weight:600;letter-spacing:-.02em}
+.shdr p{font-size:14px;color:var(--muted);margin-top:4px}
+
+.ugrid{display:grid;grid-template-columns:1fr 300px;gap:20px}
+@media(max-width:700px){.ugrid{grid-template-columns:1fr}}
+
+.dz{border:2px dashed var(--border);border-radius:var(--rl);padding:3.5rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;background:var(--bg2)}
+.dz:hover,.dz.dov{border-color:var(--blue);background:rgba(56,139,253,.04)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dzico{font-size:2.5rem;margin-bottom:1rem;opacity:.5}
+.dzttl{font-size:15px;font-weight:600;margin-bottom:6px}
+.dzsub{font-size:13px;color:var(--muted);margin-bottom:1rem}
+.dzfmt{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.ftag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+
+.fcard{display:none;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-top:14px}
+.fcard.on{display:flex}
+.fico{font-size:1.5rem;opacity:.7}
+.fmeta{flex:1}
+.fname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.fsz{font-size:12px;color:var(--muted)}
+.fclr{background:none;border:none;color:var(--hint);font-size:18px;padding:4px;border-radius:4px}
+.fclr:hover{color:var(--red)}
+
+.ubtn{width:100%;margin-top:14px;padding:13px;border-radius:var(--r);background:var(--blue-dim);color:#fff;font-size:15px;font-weight:600;border:none;transition:opacity .15s,background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.ubtn:disabled{opacity:.35;cursor:not-allowed}
+.ubtn:not(:disabled):hover{background:var(--blue)}
+
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:12px}
+.ittl{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.kv:last-child{border-bottom:none}
+.kk{font-size:12px;color:var(--muted)}
+.kv2{font-family:var(--mono);font-size:12px;font-weight:700}
+
+/* ── PROCESSING ──────────────────────────────────────────── */
+#s-proc{padding:4rem 0;text-align:center}
+.pfname{font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 16px;display:inline-block;margin-bottom:2rem}
+.ph2{font-size:1.6rem;font-weight:600;letter-spacing:-.02em;margin-bottom:8px}
+.psub{font-size:14px;color:var(--muted);margin-bottom:2.5rem}
+
+.pbar{height:3px;background:var(--border);border-radius:999px;overflow:hidden;max-width:420px;margin:0 auto 6px}
+.pfill{height:100%;background:var(--blue);border-radius:999px;width:0%;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.ppct{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:2.5rem}
+
+.slist{max-width:360px;margin:0 auto;text-align:left}
+.srow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--hint);transition:color .2s}
+.srow:last-child{border-bottom:none}
+.srow.sd{color:var(--text)}.srow.sa{color:var(--blue);font-weight:500}
+.sico{width:22px;text-align:center;font-size:15px}
+.srow.sd .sico{color:var(--green)}.srow.sa .sico{color:var(--blue)}
+
+/* ── RESULTS ─────────────────────────────────────────────── */
+#s-res{padding:2.5rem 0 4rem}
+.rtop{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:1.5rem}
+.rtop h2{font-size:1.4rem;font-weight:600;letter-spacing:-.02em}
+.bdg{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);border:1px solid rgba(63,185,80,.25);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:500}
+
+/* Note: the combined video plays in ONE player, no tabs needed */
+.vwrap{background:#000;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;position:relative;margin-bottom:12px}
+.vwrap video{width:100%;display:block}
+.vempty{text-align:center;color:var(--hint);padding:4rem 2rem}
+.vemico{font-size:3rem;margin-bottom:10px;opacity:.4}
+.vemtxt{font-size:13px}
+
+.dlrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.dlbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--bg2);color:var(--text);transition:border-color .15s,background .15s;text-decoration:none;cursor:pointer}
+.dlbtn:hover{border-color:var(--border2);background:var(--bg3);text-decoration:none}
+.dlbtn.dp{background:var(--blue-dim);color:#fff;border-color:transparent}
+.dlbtn.dp:hover{background:var(--blue)}
+
+.sgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:1.5rem}
+@media(max-width:600px){.sgrid{grid-template-columns:repeat(2,1fr)}}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.slbl{font-size:11px;color:var(--muted);margin-bottom:4px}
+.sval{font-family:var(--mono);font-size:15px;font-weight:700}
+
+.acts{margin-top:1.5rem;display:flex;gap:10px;flex-wrap:wrap}
+.gbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--r);font-size:13px;border:1px solid var(--border);background:transparent;color:var(--muted);transition:color .12s,border-color .12s}
+.gbtn:hover{color:var(--text);border-color:var(--border2)}
+
+/* Video note box */
+.vnote{background:rgba(56,139,253,.07);border:1px solid rgba(56,139,253,.25);border-radius:var(--r);padding:10px 14px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.vnote strong{color:var(--blue)}
+
+/* Recordings list */
+.rsec{margin-top:2.5rem}
+.rttl{font-size:12px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.rlist{display:flex;flex-direction:column;gap:8px}
+.rrow{display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;cursor:pointer;transition:border-color .15s}
+.rrow:hover{border-color:var(--border2)}
+.rico{font-size:1.1rem;color:var(--muted)}
+.rmeta{flex:1}
+.rname{font-size:13px;font-weight:500}
+.rsub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.rh{font-family:var(--mono);font-size:13px;color:var(--blue)}
+.rempty{font-size:13px;color:var(--hint);padding:1rem 0;text-align:center}
+
+/* Upload progress overlay */
+.ovl{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+.ovl.on{display:flex}
+.obox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:2rem 2.5rem;min-width:300px;text-align:center}
+.obox h3{font-size:1.1rem;font-weight:600;margin-bottom:6px}
+.obox p{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
+.obar{height:4px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:8px}
+.ofill{height:100%;background:var(--blue);border-radius:999px;width:0%;transition:width .3s ease}
+.opct{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* Toasts */
+#toasts{position:fixed;bottom:1.5rem;right:1.5rem;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:8px;animation:si .2s ease}
+.toast.ok{border-color:rgba(63,185,80,.4)}.toast.err{border-color:rgba(248,81,73,.4);color:var(--red)}
+@keyframes si{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ─────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="tlogo">Safe<span>Zone</span> 3D</div>
+  <nav class="tnav">
+    <button class="nbtn on" id="nb-land" onclick="nav('land')">Home</button>
+    <button class="nbtn"    id="nb-up"   onclick="nav('up')">Upload</button>
+    <button class="nbtn"    id="nb-res"  onclick="nav('res'); loadRecs()">Recordings</button>
+  </nav>
+  <div class="tsep"></div>
+  <div class="tcss">
+    <div class="dot-g"></div>
+    <span>Live stream</span>
+    <span class="soon">COMING SOON</span>
+  </div>
+</header>
+
+<div id="toasts"></div>
+
+<!-- Upload progress overlay -->
+<div class="ovl" id="ovl">
+  <div class="obox">
+    <h3>Uploading video</h3>
+    <p id="ovlfile">—</p>
+    <div class="obar"><div class="ofill" id="ofill"></div></div>
+    <div class="opct" id="opct">0%</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     LANDING
+════════════════════════════════════════════════════════════ -->
+<div class="scr on" id="s-land">
+  <div class="wrap">
+    <section style="padding:5rem 0 4rem;text-align:center">
+      <div class="eyebrow">SafeZone 3D &nbsp;·&nbsp; Stereo Vision · YOLOv8 · StereoSGBM</div>
+
+      <h1 class="htitle">
+        Upload your hump<br>
+        <span class="ac">detection recording</span>
+      </h1>
+
+      <p class="hsub">
+        Record the raw stereo video with your Logitech C270 rig using
+        <strong>local_capture.py</strong>, upload it here, and get a
+        combined dashboard video — HUD + height graph side-by-side —
+        ready to download.
+      </p>
+
+      <div class="how">
+        <div class="hcard">
+          <div class="hstep">STEP 01</div>
+          <div class="hico">🎥</div>
+          <div class="htit">Record with local_capture.py</div>
+          <div class="hdesc">Run on your laptop. Press R to record, Q to save. Produces raw_stereo_TIMESTAMP.mp4 (2560×720).</div>
+        </div>
+        <div class="hcard">
+          <div class="hstep">STEP 02</div>
+          <div class="hico">☁️</div>
+          <div class="htit">Upload here</div>
+          <div class="hdesc">Drop your .mp4 file below. The backend EC2 runs your full CLAHE + SGBM + YOLO pipeline automatically.</div>
+        </div>
+        <div class="hcard">
+          <div class="hstep">STEP 03</div>
+          <div class="hico">📊</div>
+          <div class="htit">View &amp; download</div>
+          <div class="hdesc">Watch the combined dashboard (HUD + graph) inline and download it as a single mp4.</div>
+        </div>
+      </div>
+
+      <div class="lchip">
+        📡 Live stream
+        <span class="soon">COMING SOON</span>
+      </div>
+
+      <div class="cta">
+        <button class="btn bp" onclick="nav('up')">⬆ Upload a recording</button>
+        <button class="btn bs" onclick="nav('res'); loadRecs()">🗂 View past recordings</button>
+      </div>
+
+      <div class="sstrip">
+        <div class="si"><div class="sl">Baseline</div><div class="sv">19.7 cm</div></div>
+        <div class="si"><div class="sl">Focal</div><div class="sv">1463 px</div></div>
+        <div class="si"><div class="sl">Algorithm</div><div class="sv">SGBM+WLS</div></div>
+        <div class="si"><div class="sl">λ / σ</div><div class="sv">8000 / 1.5</div></div>
+        <div class="si"><div class="sl">Model</div><div class="sv">YOLOv8</div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     UPLOAD
+════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-up">
+  <div class="wrap">
+    <div class="shdr">
+      <h2>Upload your recording</h2>
+      <p>Drop the raw_stereo_*.mp4 file produced by local_capture.py</p>
+    </div>
+
+    <div class="ugrid">
+
+      <!-- Drop zone -->
+      <div>
+        <div class="dz" id="dz">
+          <input type="file" id="fi" accept=".mp4,.avi,.mkv" onchange="onFile(this.files[0])">
+          <div class="dzico">📂</div>
+          <div class="dzttl">Drop your video here</div>
+          <div class="dzsub">or click to browse</div>
+          <div class="dzfmt">
+            <span class="ftag">.mp4</span>
+            <span class="ftag">.avi</span>
+            <span class="ftag">max 500 MB</span>
+          </div>
+        </div>
+
+        <div class="fcard" id="fcard">
+          <div class="fico">🎞</div>
+          <div class="fmeta">
+            <div class="fname" id="fname">—</div>
+            <div class="fsz"   id="fsz">—</div>
+          </div>
+          <button class="fclr" onclick="clearFile()">✕</button>
+        </div>
+
+        <button class="ubtn" id="ubtn" disabled onclick="startUpload()">
+          ⬆&nbsp; Analyse recording
+        </button>
+      </div>
+
+      <!-- Sidebar -->
+      <div>
+        <div class="icard">
+          <div class="ittl">System parameters</div>
+          <div class="kv"><span class="kk">Baseline</span><span class="kv2">19.7 cm</span></div>
+          <div class="kv"><span class="kk">Focal length</span><span class="kv2">1463 px</span></div>
+          <div class="kv"><span class="kk">SGBM numDisp</span><span class="kv2">256</span></div>
+          <div class="kv"><span class="kk">WLS λ / σ</span><span class="kv2">8000 / 1.5</span></div>
+          <div class="kv"><span class="kk">Disparity range</span><span class="kv2">20 – 400 px</span></div>
+          <div class="kv"><span class="kk">Buffer (frames)</span><span class="kv2">30</span></div>
+        </div>
+
+        <div class="icard">
+          <div class="ittl">Output</div>
+          <div class="kv"><span class="kk">Format</span><span class="kv2">1 combined mp4</span></div>
+          <div class="kv"><span class="kk">Left half</span><span class="kv2">Detection HUD</span></div>
+          <div class="kv"><span class="kk">Right half</span><span class="kv2">Height graph</span></div>
+          <div class="kv"><span class="kk">Resolution</span><span class="kv2">2180 × 720</span></div>
+        </div>
+
+        <div class="icard">
+          <div class="ittl">Tips</div>
+          <div style="font-size:12.5px;color:var(--muted);line-height:1.8">
+            • Record from ≥ 3 m away<br>
+            • Adjust exposure with [ / ] keys<br>
+            • Keep recording to 10–30 seconds<br>
+            • Press Q to save, not X the window
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PROCESSING
+════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-proc">
+  <div class="wrap">
+    <div style="text-align:center;padding:4rem 0">
+      <div class="pfname" id="pfname">raw_stereo.mp4</div>
+      <h2 class="ph2">Analysing your recording</h2>
+      <p class="psub">Running YOLOv8 + StereoSGBM on the backend EC2 — takes 30–120 seconds</p>
+
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="ppct" id="ppct">0%</div>
+
+      <div class="slist" id="slist">
+        <div class="srow" data-i="0"><span class="sico">⬆</span> Uploading to backend EC2</div>
+        <div class="srow" data-i="1"><span class="sico">📐</span> Loading stereo_map.xml calibration</div>
+        <div class="srow" data-i="2"><span class="sico">🧠</span> Running YOLOv8 hump detection</div>
+        <div class="srow" data-i="3"><span class="sico">🔭</span> StereoSGBM + WLS disparity computation</div>
+        <div class="srow" data-i="4"><span class="sico">📈</span> Generating height profile graph</div>
+        <div class="srow" data-i="5"><span class="sico">📦</span> Uploading dashboard video to S3</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     RESULTS
+════════════════════════════════════════════════════════════ -->
+<div class="scr" id="s-res">
+  <div class="wrap">
+
+    <div class="rtop">
+      <h2>Detection Results</h2>
+      <span class="bdg" id="resbdg" style="display:none">✓ &nbsp;Analysis complete</span>
+    </div>
+
+    <!-- The combined 2180×720 dashboard video -->
+    <div class="vnote" id="vnote" style="display:none">
+      <strong>Dashboard video:</strong> left half = Detection HUD &nbsp;|&nbsp; right half = Height Graph.
+      Use fullscreen for best view.
+    </div>
+
+    <div class="vwrap" id="vwrap">
+      <div class="vempty">
+        <div class="vemico">📽</div>
+        <div class="vemtxt">Upload a recording to see results here</div>
+      </div>
+    </div>
+
+    <div class="dlrow">
+      <button class="dlbtn dp" id="dlbtn" style="display:none" onclick="doDownload()">
+        ⬇ Download dashboard video
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="sgrid">
+      <div class="sc"><div class="slbl">Humps detected</div><div class="sval" id="st-h">—</div></div>
+      <div class="sc"><div class="slbl">Peak height</div><div class="sval" id="st-ph">—</div></div>
+      <div class="sc"><div class="slbl">Total frames</div><div class="sval" id="st-f">—</div></div>
+      <div class="sc"><div class="slbl">Timestamp</div><div class="sval" id="st-ts">—</div></div>
+    </div>
+
+    <div class="acts">
+      <button class="gbtn" onclick="nav('up')">⬆ Upload another</button>
+      <button class="gbtn" onclick="loadRecs()">🔄 Refresh recordings</button>
+    </div>
+
+    <!-- Past recordings list -->
+    <div class="rsec">
+      <div class="rttl">Recent recordings</div>
+      <div class="rlist" id="rlist">
+        <div class="rempty">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════ -->
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+// Empty string = same origin (Nginx proxy on web EC2 forwards /api/* to backend).
+// Change to full URL only when running index.html locally for development.
+const BACKEND = "";
+
+// ── NAVIGATION ────────────────────────────────────────────
+function nav(name) {
+  document.querySelectorAll(".scr").forEach(s => s.classList.remove("on"));
+  document.querySelectorAll(".nbtn").forEach(b => b.classList.remove("on"));
+  document.getElementById("s-" + name).classList.add("on");
+  const nb = document.getElementById("nb-" + name);
+  if (nb) nb.classList.add("on");
+  window.scrollTo(0, 0);
+}
+
+// ── FILE SELECTION ────────────────────────────────────────
+let selFile  = null;
+let curJobId = null;
+let curKey   = null;
+
+function onFile(f) {
+  if (!f) return;
+  selFile = f;
+  document.getElementById("fname").textContent = f.name;
+  document.getElementById("fsz").textContent   = fmtBytes(f.size);
+  document.getElementById("fcard").classList.add("on");
+  document.getElementById("ubtn").disabled = false;
+}
+
+function clearFile() {
+  selFile = null;
+  document.getElementById("fi").value      = "";
+  document.getElementById("fcard").classList.remove("on");
+  document.getElementById("ubtn").disabled = true;
+}
+
+function fmtBytes(b) {
+  if (b < 1048576) return (b/1024).toFixed(1) + " KB";
+  return (b/1048576).toFixed(1) + " MB";
+}
+
+// Drag-and-drop
+const dzel = document.getElementById("dz");
+dzel.addEventListener("dragover",  e => { e.preventDefault(); dzel.classList.add("dov"); });
+dzel.addEventListener("dragleave", () => dzel.classList.remove("dov"));
+dzel.addEventListener("drop", e => {
+  e.preventDefault(); dzel.classList.remove("dov");
+  const f = e.dataTransfer.files[0];
+  if (f) { document.getElementById("fi").files = e.dataTransfer.files; onFile(f); }
+});
+
+// ── UPLOAD ────────────────────────────────────────────────
+async function startUpload() {
+  if (!selFile) return;
+
+  document.getElementById("pfname").textContent = selFile.name;
+  nav("proc");
+  startStageAnim();
+
+  // Show upload overlay
+  document.getElementById("ovlfile").textContent = selFile.name;
+  document.getElementById("ovl").classList.add("on");
+
+  try {
+    // POST multipart to /api/upload
+    const form = new FormData();
+    form.append("video", selFile);
+
+    const resp = await uploadWithProgress(BACKEND + "/api/upload", form);
+
+    document.getElementById("ovl").classList.remove("on");
+
+    if (!resp.ok) throw new Error(`Upload failed: ${resp.status}`);
+    const data = await resp.json();
+    curJobId   = data.job_id;
+
+    // Poll job status until done
+    await pollJob(curJobId);
+
+  } catch (err) {
+    document.getElementById("ovl").classList.remove("on");
+    console.error(err);
+    toast("Upload failed — check console", "err");
+    // Fall back to showing local preview with placeholder stats
+    fallbackLocal(selFile);
+  }
+}
+
+// XHR upload with progress bar
+function uploadWithProgress(url, formData) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.upload.onprogress = e => {
+      if (!e.lengthComputable) return;
+      const pct = Math.round(e.loaded / e.total * 100);
+      document.getElementById("ofill").style.width = pct + "%";
+      document.getElementById("opct").textContent  = pct + "%";
+    };
+    xhr.onload = () => {
+      resolve({ ok: xhr.status < 300, status: xhr.status, json: () => JSON.parse(xhr.responseText) });
+    };
+    xhr.onerror = () => reject(new Error("XHR network error"));
+    xhr.send(formData);
+  });
+}
+
+// ── JOB POLLING ───────────────────────────────────────────
+async function pollJob(jobId) {
+  const POLL_MS = 3000;
+  const pctMap  = { queued: 5, processing: 40, done: 100, error: 0 };
+
+  while (true) {
+    await sleep(POLL_MS);
+    try {
+      const r = await fetch(BACKEND + "/api/job/" + jobId);
+      if (!r.ok) continue;
+      const j = await r.json();
+
+      // Update progress bar to server-reported value
+      const pct = j.progress_pct || pctMap[j.status] || 0;
+      document.getElementById("pfill").style.width = pct + "%";
+      document.getElementById("ppct").textContent  = pct + "%";
+
+      if (j.status === "done") {
+        curKey = j.output_key;
+        showResults(j);
+        return;
+      }
+      if (j.status === "error") {
+        toast("Processing error: " + j.error, "err");
+        nav("up");
+        return;
+      }
+    } catch (_) { /* network blip, keep polling */ }
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── STAGE ANIMATION ───────────────────────────────────────
+// This runs purely cosmetically while the real job runs on EC2.
+let stageTimer = null;
+
+function startStageAnim() {
+  resetStages();
+  const rows  = document.querySelectorAll(".srow");
+  const times = [800, 1200, 4000, 5000, 3000, 2000];
+  let i = 0;
+  function next() {
+    if (i > 0) {
+      rows[i-1].classList.remove("sa");
+      rows[i-1].classList.add("sd");
+      rows[i-1].querySelector(".sico").textContent = "✓";
+    }
+    if (i >= rows.length) return;
+    rows[i].classList.add("sa");
+    stageTimer = setTimeout(next, times[i]);
+    i++;
+  }
+  next();
+}
+
+function resetStages() {
+  if (stageTimer) clearTimeout(stageTimer);
+  const icons = ["⬆","📐","🧠","🔭","📈","📦"];
+  document.querySelectorAll(".srow").forEach((r, idx) => {
+    r.className = "srow";
+    r.querySelector(".sico").textContent = icons[idx];
+  });
+  document.getElementById("pfill").style.width = "0%";
+  document.getElementById("ppct").textContent  = "0%";
+}
+
+// ── SHOW RESULTS ──────────────────────────────────────────
+function showResults(job) {
+  document.getElementById("st-h").textContent  = job.humps_detected ?? "—";
+  document.getElementById("st-ph").textContent = job.peak_height_cm != null
+    ? job.peak_height_cm + " cm" : "—";
+  document.getElementById("st-f").textContent  = job.total_frames   ?? "—";
+  document.getElementById("st-ts").textContent = job.timestamp      ?? "—";
+
+  document.getElementById("resbdg").style.display = "inline-flex";
+  document.getElementById("vnote").style.display  = "block";
+  document.getElementById("dlbtn").style.display  = "inline-flex";
+
+  // Stream combined dashboard video from S3 via backend proxy
+  if (job.output_key) {
+    mountVideo(BACKEND + "/api/stream/" + encodeURIComponent(job.output_key));
+  }
+
+  loadRecs();
+  nav("res");
+  resetStages();
+  toast("✓ Analysis complete", "ok");
+}
+
+// ── LOCAL FALLBACK ────────────────────────────────────────
+function fallbackLocal(file) {
+  const url = URL.createObjectURL(file);
+  mountVideo(url);
+  document.getElementById("resbdg").style.display = "inline-flex";
+  document.getElementById("vnote").style.display  = "block";
+  document.getElementById("st-h").textContent  = "—";
+  document.getElementById("st-ph").textContent = "—";
+  document.getElementById("st-ts").textContent = "—";
+  nav("res");
+  resetStages();
+}
+
+// Mount a video element into the video wrapper
+function mountVideo(src) {
+  const wrap = document.getElementById("vwrap");
+  wrap.innerHTML = "";
+  const vid     = document.createElement("video");
+  vid.controls  = true;
+  vid.preload   = "metadata";
+  vid.style.cssText = "width:100%;display:block;";
+  const source  = document.createElement("source");
+  source.src    = src;
+  source.type   = "video/mp4";
+  vid.appendChild(source);
+  vid.innerHTML += `<p style="color:var(--muted);padding:1rem;font-size:13px;text-align:center">
+    Your browser doesn't support inline video.
+    Download the file to view in VLC.
+  </p>`;
+  wrap.appendChild(vid);
+  vid.load();
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────
+async function doDownload() {
+  if (!curKey) {
+    toast("No output file yet", "err"); return;
+  }
+  try {
+    const r = await fetch(BACKEND + "/api/download_url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: curKey }),
+    });
+    const d = await r.json();
+    if (d.url) {
+      const a = document.createElement("a");
+      a.href = d.url;
+      a.download = "safezone3d_dashboard.mp4";
+      a.click();
+    }
+  } catch (err) {
+    toast("Download failed", "err");
+  }
+}
+
+// ── RECORDINGS LIST ───────────────────────────────────────
+async function loadRecs() {
+  const list = document.getElementById("rlist");
+  list.innerHTML = '<div class="rempty">Loading…</div>';
+  try {
+    const r = await fetch(BACKEND + "/api/recordings");
+    if (!r.ok) throw new Error();
+    const items = await r.json();
+    if (!items.length) {
+      list.innerHTML = '<div class="rempty">No recordings yet — upload your first video.</div>';
+      return;
+    }
+    list.innerHTML = "";
+    items.slice(0, 8).forEach(item => {
+      const row = document.createElement("div");
+      row.className = "rrow";
+      row.innerHTML = `
+        <div class="rico">🎞</div>
+        <div class="rmeta">
+          <div class="rname">dashboard_${item.timestamp || "—"}.mp4</div>
+          <div class="rsub">${item.total_frames || "—"} frames &nbsp;·&nbsp; ${item.upload_time?.slice(0,10) || ""}</div>
+        </div>
+        <div class="rh">${item.peak_height_cm != null ? item.peak_height_cm + " cm" : "—"}</div>`;
+      row.onclick = () => {
+        curKey = item.output_key;
+        document.getElementById("st-h").textContent  = item.humps_detected ?? "—";
+        document.getElementById("st-ph").textContent = item.peak_height_cm != null ? item.peak_height_cm + " cm" : "—";
+        document.getElementById("st-f").textContent  = item.total_frames   ?? "—";
+        document.getElementById("st-ts").textContent = item.timestamp      ?? "—";
+        document.getElementById("resbdg").style.display = "inline-flex";
+        document.getElementById("vnote").style.display  = "block";
+        document.getElementById("dlbtn").style.display  = "inline-flex";
+        if (item.output_key) mountVideo(BACKEND + "/api/stream/" + encodeURIComponent(item.output_key));
+        nav("res");
+      };
+      list.appendChild(row);
+    });
+  } catch (_) {
+    list.innerHTML = '<div class="rempty">Could not load — is the backend running?</div>';
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function toast(msg, type = "ok") {
+  const t = document.createElement("div");
+  t.className   = "toast " + type;
+  t.textContent = msg;
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>

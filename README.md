@@ -83,24 +83,49 @@ Laptop (2 cams) → ALB → Frontend EC2 (Nginx) → VPC Peering → Backend EC2
 
 ### Image reference
 
-| # | File | Covers |
-|---|---|---|
-| 01 | `01-vpc-a.png` | VPC-A — backend processing network (private subnet) |
-| 02 | `02-vpc-b.png` | VPC-B — frontend network (public + private subnet) |
-| 03 | `03-vpc-peering.png` | VPC peering connection between A and B |
-| 04 | `04-route-tables.JPG` | Route tables controlling subnet-level access |
-| 05 | `05-alb.png` | Application Load Balancer config |
-| 06 | `06-asg.png` | Auto Scaling Groups (frontend + backend) |
-| 07 | `07-route53.png` | Route 53 hosted zone / DNS records |
-| 08 | `08-s3-bucket.png` | S3 bucket storing processed videos |
-| 09 | `09-dynamodb-table.png` | DynamoDB table + items |
-| 10 | `10-lamda-trigger.png` | Lambda trigger config (S3 event source) |
-| 11 | `11-ACM.png` | ACM certificate |
-| 12 | `12-upload-page.png` | Frontend — upload screen |
-| 13 | `13-processing-page.png` | Frontend — processing/status screen |
-| 14 | `14-results-page.png` | Frontend — results/dashboard screen |
+**VPC-A — backend processing network (private subnet)**
+![VPC-A](docs/01-vpc-a.png)
 
-> Place these 14 images in a `docs/` folder at the repo root so the links above resolve.
+**VPC-B — frontend network (public + private subnet)**
+![VPC-B](docs/02-vpc-b.png)
+
+**VPC peering connection between A and B**
+![VPC Peering](docs/03-vpc-peering.png)
+
+**Route tables controlling subnet-level access**
+![Route Tables](docs/04-route-tables.JPG)
+
+**Application Load Balancer config**
+![ALB](docs/05-alb.png)
+
+**Auto Scaling Groups (frontend + backend)**
+![Auto Scaling Groups](docs/06-asg.png)
+
+**Route 53 hosted zone / DNS records**
+![Route 53](docs/07-route53.png)
+
+**S3 bucket storing processed videos**
+![S3 Bucket](docs/08-s3-bucket.png)
+
+**DynamoDB table + items**
+![DynamoDB](docs/09-dynamodb-table.png)
+
+**Lambda trigger config (S3 event source)**
+![Lambda Trigger](docs/10-lamda-trigger.png)
+
+**ACM certificate**
+![ACM](docs/11-ACM.png)
+
+**Frontend — upload screen**
+![Upload Page](docs/12-upload-page.png)
+
+**Frontend — processing/status screen**
+![Processing Page](docs/13-processing-page.png)
+
+**Frontend — results/dashboard screen**
+![Results Page](docs/14-results-page.png)
+
+> Place these 14 images in a `docs/` folder at the repo root so the images above render.
 
 ---
 
