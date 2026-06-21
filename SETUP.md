@@ -60,4 +60,4 @@ pip3 install flask flask-cors boto3 ultralytics \
 
 ## Full AWS deployment
 
-For step-by-step VPC/EC2/S3/DynamoDB/Lambda/Route53 setup, see the full deployment guide (not included in this public repo — kept private since it contains account-specific naming).
+For step-by-step VPC/EC2/S3/DynamoDB/Lambda/Route53 setup, see the full deployment guide from aws docemuntation .
