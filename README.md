@@ -151,7 +151,3 @@ gunicorn -w 1 -b 0.0.0.0:5000 --timeout 600 app:app
 
 ---
 
-## Author
-
-**Ayush** — ECE, VVCE Mysuru · Final Year Project 2025–26
-GitHub: [@Ayush00034](https://github.com/Ayush00034)
