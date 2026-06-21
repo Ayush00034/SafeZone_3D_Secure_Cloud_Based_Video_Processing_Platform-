@@ -1,0 +1,12 @@
+# Tell GitHub's Linguist not to count the frontend HTML/CSS/JS bundle
+# toward the repo's "main language" stat — this project's primary work
+# is the AWS infrastructure and Python backend, not the frontend markup.
+
+index.html linguist-vendored
+*.html linguist-vendored
+
+# Keep Python files counted normally (this is the real backend logic)
+*.py linguist-detectable=true
+
+# Don't count documentation assets as code
+docs/* linguist-documentation
