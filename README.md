@@ -19,7 +19,6 @@ The infrastructure is split across two VPCs connected by VPC Peering.
 
 Keeping the processing server in a private subnet means it's never directly exposed to the internet — all traffic to it has to come through the frontend tier first. Route tables enforce this at the subnet level (no `0.0.0.0/0 → Internet Gateway` entry on VPC-A's private subnet), and Security Groups enforce it at the instance level (the backend SG only allows inbound traffic from the frontend SG).
 
-> 📁 `docs/01-vpc-a.png`, `docs/02-vpc-b.png`, `docs/03-vpc-peering.png`, `docs/04-route-tables.JPG`
 
 ---
 
@@ -84,45 +83,59 @@ Laptop (2 cams) → ALB → Frontend EC2 (Nginx) → VPC Peering → Backend EC2
 ### Image reference
 
 **VPC-A — backend processing network (private subnet)**
+
 ![VPC-A](docs/01-vpc-a.png)
 
 **VPC-B — frontend network (public + private subnet)**
+
 ![VPC-B](docs/02-vpc-b.png)
 
 **VPC peering connection between A and B**
+
 ![VPC Peering](docs/03-vpc-peering.png)
 
 **Route tables controlling subnet-level access**
-![Route Tables](docs/04-route-tables.JPG)
+
+![Route Tables](docs/04-route-tables.jpeg)
 
 **Application Load Balancer config**
+
 ![ALB](docs/05-alb.png)
 
 **Auto Scaling Groups (frontend + backend)**
+
 ![Auto Scaling Groups](docs/06-asg.png)
 
 **Route 53 hosted zone / DNS records**
+
 ![Route 53](docs/07-route53.png)
 
 **S3 bucket storing processed videos**
+
 ![S3 Bucket](docs/08-s3-bucket.png)
 
 **DynamoDB table + items**
+
 ![DynamoDB](docs/09-dynamodb-table.png)
 
 **Lambda trigger config (S3 event source)**
+
 ![Lambda Trigger](docs/10-lamda-trigger.png)
 
 **ACM certificate**
+
 ![ACM](docs/11-ACM.png)
 
 **Frontend — upload screen**
+
 ![Upload Page](docs/12-upload-page.png)
 
 **Frontend — processing/status screen**
+
 ![Processing Page](docs/13-processing-page.png)
 
 **Frontend — results/dashboard screen**
+
 ![Results Page](docs/14-results-page.png)
 
 > Place these 14 images in a `docs/` folder at the repo root so the images above render.
