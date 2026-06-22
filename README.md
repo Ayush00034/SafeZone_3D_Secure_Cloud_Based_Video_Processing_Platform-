@@ -92,7 +92,7 @@ Laptop (2 cams) → ALB → Frontend EC2 (Nginx) → VPC Peering → Backend EC2
 ![VPC Peering](docs/03-vpc-peering.png)
 
 **Route tables controlling subnet-level access**
-![Route Tables](docs/04-route-tables.JPG)
+![Route Tables](docs/04-route-tables.jpeg)
 
 **Application Load Balancer config**
 ![ALB](docs/05-alb.png)
